@@ -1,18 +1,21 @@
 "use strict"
 
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 import initPrompt from 'prompt-sync';
 
 const prompt = initPrompt();
 
 function allTrue(a, b){
-    return a && b
+    return a && b;
 }
 
 function isNumeric(c){
     /*Returns true if the given character is between '0' and '9'
         c is assumed to be a string of length 1
     */
-    return "0" <= c && c <= "9"
+    return "0" <= c && c <= "9";
 }
 
 function isStringNumeric(s){
@@ -20,7 +23,7 @@ function isStringNumeric(s){
     
     // First, make a list of which symbols in the given string are numeric (map)
     // Then determine if that list is a sequence of only True values (reduce)
-    return reduce(allTrue, map(isNumeric, s))
+    return Array.from(s).map(isNumeric).reduce(allTrue);
 }
 
 function makeCode(length){
@@ -29,9 +32,10 @@ function makeCode(length){
        (010, 007, and 000 are all possible codes.)
     */
     
-    code = ""
-    for (_ in range(length)){
-        code += str(randint(0,9))}
+    let code = ""
+    for (let _ = 0 ; _ < length ; _ += 1 ) {
+        code += "" + Math.floor(Math.random()*10);
+    }
     
     return code
 }
@@ -39,20 +43,20 @@ function makeCode(length){
 function getGuess(code_length){
     /*Recursively prompt the player for a guess*/
 
-    guess = input("Guess the code{ ")
+    const guess = prompt("Guess the code{ ")
     
-    if (len(guess) != code_length){
+    if (guess.length != code_length){
         console.log(`You must enter ${code_length} numbers`)
         return getGuess(code_length)
     }
     
-    if (not isStringNumeric(guess)){
+    if (! isStringNumeric(guess)){
         console.log("The code may contain only numbers")
         return getGuess(code_length)
     }
     
     return guess
-    }
+}
     
 function countMatches(code, guess){
     /*Returns a tuple (M,S) where M (matches) is the number of symbols in the player's guess
@@ -62,47 +66,53 @@ function countMatches(code, guess){
     */
     
     // First, convert the strings into lists, which are mutable (we will take advantage of this fact)
-    codeNumbers = list(code)
-    guessNumbers = list(guess)
+    const codeNumbers = Array.from(code);
+    const guessNumbers = Array.from(guess);
     
-    numMatches = 0
-    num_semiMatches = 0
+    let numMatches = 0;
+    let num_semiMatches = 0;
     
     // Find the exact matches first
-    for (i in range(len(codeNumbers))){
+    for (let i = 0; i < codeNumbers.length; i += 1) {
         // Any given position that has the same symbol in both the code and the guess is an exact match
         if (codeNumbers[i] == guessNumbers[i]){
             // Mark matches in the lists of numbers so we don't double-match any of them
-            codeNumbers[i] = "-"
-            guessNumbers[i] = "-"
-            numMatches += 1}}
+            codeNumbers[i] = "-";
+            guessNumbers[i] = "-";
+            numMatches += 1;
+        }
+    }
 
     // Now determine if there are any semi-matches, ignoring any symbols for which we have already
     // identified an exact match
-    for (g in guessNumbers){
+    for (const g of guessNumbers) {
         
         // Skip any guess numbers we've already matched
-        if (g == "-"){
-            continue}
+        if (g == "-") {
+            continue;
+        }
         
         // We need to compare ALL the symbols in the code with each symbol in the guess
         // because a a semi-match means the guess symbol is somewhere in the code but not
         // in the same position as it is in the guess
-        for (i in range(len(codeNumbers))){
-            c = codeNumbers[i]}
+        for (let i = 0 ; i < codeNumbers.length ; i += 1 ) {
+            const c = codeNumbers[i];
             
             // Skip any code numbers we've already matched
-            if (c == "-"){
-                continue}
+            if (c == "-") {
+                continue;
+            }
         
             if (g == c) {
                 // Once a code symbol has been matched, mark it so it doesn't get double-matched
-                codeNumbers[i] = "-"   
-                num_semiMatches += 1
-                break}
+                codeNumbers[i] = "-";
+                num_semiMatches += 1;
+                break;
             }
+        }
+    }
     
-    return (numMatches, num_semiMatches)
+    return [numMatches, num_semiMatches];
 }
 
 function getCodeLength(){
@@ -110,11 +120,12 @@ function getCodeLength(){
     
     let response = prompt("How long do you want the code to be? ")
     
-    if (!(isStringNumeric)){
+    if (! isStringNumeric(response) ){
         console.log("You must enter a number")
         return getCodeLength()
     }
-    let n = response
+
+    let n = parseInt(response);
     
     if (n < 2){
         console.log("You must choose a number greater than 1")
@@ -127,39 +138,47 @@ function getCodeLength(){
 function getHistoryPath(){
     /*Returns the path to the history file used by the game.
        The path is to a file named 'CODEBREAKER.history' in the users' home directory*/
-    return os.path.join(os.path.expanduser("~"), "CODEBREAKER.history")
+    return path.join(os.homedir(), "CODEBREAKER.history");
 }
 
 function writeHistory(history){
     /*Writes the given history out to the history file in the format described in the
        load_history function*/
     
-    historyPath = getHistoryPath()
-    if (os.path.exists(history_path)){
+    const historyPath = getHistoryPath()
+    if (fs.existsSync(historyPath)){
         try{
-            with (open(history_path, "w") as f){
-                for ((code_length, data) in history.items()){
-                    // See the load_history docstring for a description of the line format here
-                    f.write(`${code_length}:${data[0]}:${data[1]}:${data[2]}` + os.linesep)}}
-        default{
-            print("Uh oh, the history file couldn't be updated")}}}
+            let contents = "";
+            const fileData = fs.readFileSync(historyPath).toString().split(os.EOL);
+            for ( let items of history ) {
+                const codeLength = items[0];
+                const {numGames, best, average} = items[1];
+                // See the loadHistory docstring for a description of the line format here
+                contents += `${codeLength}:${numGames}:${best}:${average}` + os.EOL
+            }
+            fs.writeFileSync(historyPath,contents);
+        } catch {
+            console.log("Uh oh, the history file couldn't be updated")
+        }
+    }
 }
 
 function updateHistory(history, codeLength, numGuesses){
     /*Updates the given history dict such that the best and average scores for
        the given codeLength entry incorporate the given numGuesses*/
     
-    if (codeLength in history){
+    if (history.has(codeLength)){ 
         //Get the current stats for the given code length
-        (numGames, best, average) = history[codeLength]
+        let {numGames, best, average} = history.get(codeLength);
         
         //Print an appropriate message if the player did well
         if (numGuesses < best){
             console.log(`${numGuesses} is a new best score for codes of length ${codeLength}!`)
             //Update the best score if the player did better than the previous best
-            best = numGuesses}
-        else if (numGuesses < average){
-            console.log(`${numGuesses} is better than your average score of ${average} for codes of length ${codeLength}!`)}
+            best = numGuesses
+        } else if (numGuesses < average){
+            console.log(`${numGuesses} is better than your average score of ${average} for codes of length ${codeLength}!`)
+        }
             
         // Calculate the new average score, factoring in the previous average, the number of games
         // and the new given score
@@ -171,11 +190,12 @@ function updateHistory(history, codeLength, numGuesses){
         numGames += 1
             
         // Update the history for the given code length with the new stats we've calculated
-        history[codeLength] = (numGames, best, average)}
-    else{
+        history.set(codeLength, {numGames, best, average});
+    } else {
         // If the given codeLength is not already in the history
         // just add a new entry; this was the first game at that code length
-        history[codeLength] = (1, numGuesses, numGuesses)}
+        history.set(codeLength, { numGames: 1, best: numGuesses, average: numGuesses});
+    }
     
     writeHistory(history)
 
@@ -191,33 +211,37 @@ function loadHistory(){
        The resultant dictionary has the different values for L as its keys, and
        the value for each key is an (N,B,A) tuple.
     */
-    let historyPath = getHistoryPath()
+    let historyPath = getHistoryPath();
     
-    history = {}
+    let history = new Map();
     
-    if (os.path.exists(historyPath)){
+    if (fs.existsSync(historyPath)){
         try{
-            with (open(historyPath) as f){
-                for (line in f.readlines()){
-                    if ( line.strip() != "")  //Ignore empty lines
-                        line.split("{") = (codeLength, numGames, best, average)
-                        history[int(codeLength)] = (int(numGames), int(best), float(average))}}
-        try{
-            console.log("Uh oh, your history file could not be read")}
+            const fileContents = fs.readFileSync(historyPath).toString().split("\n");
+            
+            for ( const line of fileContents ) {
+                if ( line.trim() === "" ) { continue; }
+                
+                const [codeLength, numGames, best, average] = line.split(":");
+                history.set(parseInt(codeLength), {
+                    numGames: parseInt(numGames),
+                    best: parseInt(best),
+                    average: parseFloat(average)
+                });
+            }
+        } catch {
+            console.log("Uh oh, your history file could not be read");
         }
-    
-    finally{
-        try{
-            //Make an empty history file if there's not already one present
-            f = open(history_path, "w")
-            f.close()
+    } else {
+        try {
+            // Make an empty history file if there's not already one present
+            fs.writeFileSync(historyPath, "");
+        } catch {
+            console.log("Uh oh, I couldn't create a history file for you");
         }
-        finally{
-            console.log("Uh oh, I couldn't create a history file for you")}
     }
             
-    return history
-}
+    return history;
 }
 
 function playRound(){
@@ -227,25 +251,27 @@ function playRound(){
     let codeLength = getCodeLength()
     
     //Print a bit of info about the player's history at this code length
-    history = loadHistory()
-    if (codeLength in history){
-        history[codeLength] = (numGames, best, average) 
-        console.log(`The number of times you have tried codes of length ${codeLength} is ${numGames}.  Your average and best number of guesses are ${average} and ${best}, respectively.`)}
-    else{
-        console.log(`This is your first time trying a code of length ${codeLength}`)}
+    let history = loadHistory()
+
+    if (history.has(codeLength)){
+        const {numGames, best, average} = history.get(codeLength);
+        console.log(`The number of times you have tried codes of length ${codeLength} is ${numGames}.  Your average and best number of guesses are ${average} and ${best}, respectively.`)
+    } else {
+        console.log(`This is your first time trying a code of length ${codeLength}`)
+    }
     
     //Generate a new random code
-    code = makeCode(codeLength)
+    const code = makeCode(codeLength)
     
     //Uncomment this print statement if you want to see the code for debugging purposes
     // console.log(code)
     
     //Repeatedly prompt the player for guesses and give them the appropriate feedback after each guess
-    numGuesses = 0
-    while (True){
+    let numGuesses = 0
+    while (true){
         numGuesses += 1
     
-        guess = getGuess(codeLength)
+        const guess = getGuess(codeLength)
 
         if (guess == code){
             console.log(`You cracked the code!  Number of guesses{ ${numGuesses}`)
@@ -253,13 +279,13 @@ function playRound(){
             return
         }
         else{
-            countMatches(code, guess) = (numMatches, numSemiMatches)
-            console.log("★"*numMatches + "☆"*numSemiMatches + "-"*(codeLength-numMatches-numSemiMatches))
+            const [numMatches, numSemiMatches] = countMatches(code, guess);
+            console.log("★".repeat(numMatches) + "☆".repeat(numSemiMatches) + "-".repeat(codeLength-numMatches-numSemiMatches));
         }
     }
 }
 
-function printInstructions(){
+function printInstructions() {
     console.log("You select a code length. The computer will pick a random numeric code of that length. You then try to guess the code. On every guess, the computer will tell you how many numbers in your guess are both the correct number and in the correct position (★) and how many are the correct number but not in the correct position (☆). Using this information, you should eventually be able to deduce the correct code!")
 }
 
@@ -275,19 +301,19 @@ function getMainMenuSelection(){
     let response = prompt("")
 
     switch(response){
-        case "i":{
+        case "i":
             printInstructions()
-            break;}
-        case "p":{
+            break;
+        case "p":
             playRound()
-            break;}
-        case "q":{
+            break;
+        case "q":
             console.log("Ok bye!")
-            return;}
+            return;
 
-        default:{
+        default:
             console.log("I don't understand...")
-            break;}
+            break;
     }
     getMainMenuSelection()
 }
@@ -297,4 +323,4 @@ function init(){
     getMainMenuSelection()
 }
 
-init()
+init();
