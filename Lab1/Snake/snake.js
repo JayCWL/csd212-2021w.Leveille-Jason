@@ -18,7 +18,7 @@ function px(sizeInBlocks, includeUnits=true) {
     let px = sizeInBlocks * BLOCK_SIZE; 
     
     if ( includeUnits ) {
-        px += 'px';
+        px += "px";
     }
 
     return px;
