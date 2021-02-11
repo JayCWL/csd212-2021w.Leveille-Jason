@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Snake</title>
+
+    <link rel="stylesheet" href="style.css">
+    <!-- TODO: include snake.js as a script - done -->
+    <script src="snake.js" defer></script>
+</head>
+<body>
+    <div id="container">
+        <div id="menu" class="show">
+            <div>
+                <!-- TODO: call the game.start() method when the button below is clicked -->
+                <button onclick="game.start()" id="btn-start">Start!</button>
+            </div>
+        </div>
+        <div id="score-container">Score: <span id="score"></span></div>
+        <div id="gameboard"></div>
+        <div id="game-over">GAME OVER</div>
+    </div>
+</body>
+</html>
