@@ -103,8 +103,8 @@ const board = {
      */
     clear : function() {
         /* TODO : remove all elements from the board's DOM element, 'el' */
-        while(board.el.firstChild){
-            board.el.removeChild(board.el.firstChild)
+        while(this.el.firstChild){
+            this.el.removeChild(this.el.firstChild)
         }
     },
 
@@ -113,7 +113,7 @@ const board = {
      */
     getRandomPosition : function() {
         /* TODO : return a random position inside the game board */
-        return { x: Math.floor(Math.random()*board.gridWidth), y: Math.floor(Math.random()*board.gridHeight)};
+        return { x: Math.floor(Math.random()*this.gridWidth), y: Math.floor(Math.random()*this.gridHeight)};
     },
 
     /**
@@ -121,7 +121,7 @@ const board = {
      */
     getMidPosition : function() {
         /* TODO : return a grid-aligned position closest to the midpoint of the board */
-        return { x: board.gridWidth / 2, y: board.gridHeight / 2 };
+        return { x: Math.floor(this.gridWidth / 2), y: Math.floor(this.gridHeight / 2) };
     },
 
     /**
@@ -130,7 +130,7 @@ const board = {
      */
     contains : function(point) {
         /* TODO : return true only if the given point is inside the board's grid width and height */
-        if(point.y >= 0 && point.y < board.gridHeight && point.x >= 0 && point.x < board.gridWidth){
+        if(point.y >= 0 && point.y < this.gridHeight && point.x >= 0 && point.x < this.gridWidth){
             return true;
         }
         return false;
@@ -338,7 +338,7 @@ function createFood(gridPosition) {
         foodElement.className = 'food';
         foodElement.style.height = px(1);
         foodElement.style.width = px(1);
-        foodElement.style.borderRadius = px(0.5);
+        foodElement.style.borderRadius = "50%";
         foodElement.style.backgroundColor = 'orange';
 
         return foodElement
