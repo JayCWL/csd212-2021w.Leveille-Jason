@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Snake</title>
+
+    <link rel="stylesheet" href="style.css">
+    <script defer src="snake.js"></script>
+</head>
+<body>
+    <div id="container">
+        <div id="menu" class="show">
+            <div>
+                <button id="btn-start" onclick="game.start()">Start!</button>
+            </div>
+        </div>
+        <div id="game-info">
+            <div id="stats-container">
+                <div>Score: </div>
+                <div id="score"></div>
+                <div>Speed: </div>
+                <div id="speed"></div>
+                <div>Size: </div>
+                <div id="size"></div>
+            </div>
+        </div>
+        <div id="gameboard"></div>
+        <div id="game-over">GAME OVER</div>
+        <div id="paused">PAUSED</div>
+    </div>
+</body>
+</html>
