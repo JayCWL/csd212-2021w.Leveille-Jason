@@ -563,8 +563,10 @@ const game = {
         updateGameStats(this.snake.score, this.snake.getSize(), this.snake.speed);
 
         // TODO: Set the snake name in the game UI
+        document.getElementById('type').innerHTML = settings.snakeType();
 
         // TODO: Set the snake type in the game UI
+        document.getElementById('name').innerHTML = settings.snakeName();
 
         window.addEventListener('keydown', handleKeyDown);
 
@@ -603,12 +605,7 @@ const game = {
 const settings = {
     isDebugModeOn : function() {
         // TODO: return true if the debug mode checkbox is checked, false otherwise
-        if (document.getElementById("debug-mode-on").checked = true){
-            return true;
-        }
-        else {
-            return false;
-        }
+        return document.getElementById("debug-mode-on").checked;
     },
 
     snakeColor : function() {
@@ -623,16 +620,22 @@ const settings = {
 
     snakeType : function(getValue) {
         // TODO: return the Type selected by the user
+        const el = document.getElementById("snake-type")
         if (getValue) {
-            return document.getElementById("snake-type").value;
+            return el.value;
         }
         else {
-            return document.getElementById("snake-type").options[document.getElementById("snake-type").selectedIndex].text;
+            if ( el.value ) {
+                return el.options[el.selectedIndex].text;
+            } else {
+                return "";
+            }
         }
     },
 
     snakeName : function() {
         // TODO: return the Name entered by the user
+        return document.getElementById('snake-name').value;
     }
 }
 
@@ -653,28 +656,28 @@ function validateName() {
         const startLetter = type[0];
 
         // TODO: Change the regular expression pattern so that it matches the type's start letter at the START of the name
-        let pattern = `TODO|.*`;
+        let pattern = `^${startLetter}`;
         let re = new RegExp(pattern);
         if ( ! re.test(name) ) {
             validationMessage += `${type} names must start with '${startLetter}'. `;
         }
 
         // TODO: Change the regular expression pattern so that it matches spaces followed by anything other than '-' or the first letter of a hiss corresponding to the type
-        pattern = `TODO`;
+        pattern = ` ([^-${startLetter}]|$)`;
         re = new RegExp(pattern);
         if ( re.test(name) ) {
             validationMessage += `Spaces in ${type} names must be followed by either '-' or '${startLetter}'. `;
         }
 
         // TODO: Change the regular expression pattern so that it matches INVALID hisses corresponding to the type
-        pattern = `TODO`;
+        pattern = `(^| )(${startLetter}( |$)|${startLetter}[Ss]( |$)|${startLetter}[Ss]*[^Ss ])`;
         re = new RegExp(pattern);
         if ( re.test(name) ) {
             validationMessage += `${type} hisses must start with a '${startLetter}' followed by at least two upper or lower case esses. `;
         }
 
         // TODO: Change the regular expression pattern so that it matches INVALID tongue flicks
-        pattern = `TODO`;
+        pattern = `-$|-[^-<]|<[^ ]`;
         re = new RegExp(pattern);
         if ( re.test(name) ) {
             validationMessage += `Tongue flicks must start with at least one hyphen and end with one '<'. `
@@ -683,6 +686,7 @@ function validateName() {
     }
 
     // TODO: set the custom validity message on the Name field
+    document.getElementById('snake-name').setCustomValidity(validationMessage);
 
 }
 
@@ -727,19 +731,50 @@ function init() {
         document.getElementById("snake-name").setAttribute("placeholder", temp + "ss " + temp + "SSss--<");
     })
     // TODO: Set the Type field so that NO item is selected by default
-    document.getElementById("snake-type").selectedIndex = none;
+    document.getElementById("snake-type").selectedIndex = -1;
     // TODO: Any time the Name changes, automatically select the Type based on the first letter of the name
+    document.getElementById('snake-name').addEventListener('input', () => {
+        const name = settings.snakeName();
+        const typeCtrl = document.getElementById('snake-type');
+
+        if ( name === "" ) { return; }
+    
+        // Just look at the first character of the name and make the determination based on that
+        switch ( name[0] ) {
+            case 'S':
+                typeCtrl.selectedIndex = 0;
+                break;
+            case 'H':
+                typeCtrl.selectedIndex = 1;
+                break;
+            case 'T':
+                typeCtrl.selectedIndex = 2;
+                break;
+            case 'K':
+                typeCtrl.selectedIndex = 3;
+                break;
+            default:
+                typeCtrl.selectedIndex = -1;
+                break;
+        }
+    });
 
     // TODO: Validate the Name on every input to the Name field
     document.getElementById("snake-name").oninput = (event) => {
-        let characters = "HKSsT->";
-        if (!(characters.includes(event.date))) {
-            document.getElementById("snake-name").value = document.getElementById("snake-name").value.slice(0, document.getElementById("snake-name").value.length - 1)
+        const name = settings.snakeName();
+        
+        let strippedName = "";
+        for ( let c of name ) {
+            if ( "HKSsT -<".includes(c) ) {
+                strippedName += c;
+            }
         }
+
+        document.getElementById('snake-name').value = strippedName;
     }
     // TODO: Validate teh Name every time the Type field changes
-    document.getElemenyById("name").addEventListener("input", validateName());
-    document.getElementById("tpye").addEventListener("change", validateName());
+    document.getElementById("snake-name").addEventListener("input", validateName);
+    document.getElementById("snake-type").addEventListener("change", validateName);
 }
 
 init();
