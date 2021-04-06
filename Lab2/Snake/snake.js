@@ -154,7 +154,7 @@ function createSnakeSegment(gridPosition, direction) {
         segmentEl.setAttribute("data-direction", direction);
 
         /* TODO: try using a click handler to prevent clicks on the snake from causing a game to restart */
-
+        segmentEl.onclick = e => e.preventDefault();
 
 
         return segmentEl;
@@ -481,15 +481,26 @@ const game = {
      */
     togglePause: function () {
         /* TODO: pause/unpause the game when this function is called */
+        if ( this.isPaused ) {
+            this.isPaused = false;
+            hide(document.getElementById('paused'));
+            this.restartTimer();
+        } else {
+            this.isPaused = true;
+            show(document.getElementById('paused'));
+            this.stopTimer();
+        }
     },
 
     restartTimer: function () {
         /* TODO: restart the game's interval timer */
+        if ( location.search.includes('manual') ) { return; }
+
         this.stopTimer();
 
         const interval = 2000 / this.snake.speed;
         this.timerId = setInterval(() => {
-            game.update();
+            this.update();
         }, interval);
     },
 
@@ -579,7 +590,7 @@ const game = {
     keyDown: function (key) {
         /* TODO : respond when game-related keys are pushed down */
         if (this.isPaused) {
-            if (key === "") {
+            if (key === " ") {
                 this.togglePause();
             }
         } else {
@@ -596,7 +607,7 @@ const game = {
                 case "ArrowRight":
                     this.updateDirection("R");
                     break;
-                case "":
+                case " ":
                     this.togglePause();
             }
         }
@@ -605,21 +616,25 @@ const game = {
 
 function handleKeyDown(event) {
     /* TODO: call game.keydown only if the event's key is one of the game-related keys */
-    const keys = ["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight", ""]
+    const keys = ["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight", " "]
     if (keys.includes(event.key)) {
         game.keyDown(event.key);
     }
 }
 
 /* TODO: prevent the user from accidentally closing the window/tab if they are in the middle of a game */
+window.addEventListener('beforeunload', function(event) {
+
+    if ( ! game.isOver() && ! document.getElementById('menu').classList.contains('show') ) {
+        event.preventDefault();
+        event.returnValue = "You are in the middle of a game!  Are you sure you want to leave?";
+    }
+    
+});
 
 /* TODO: show the main menu if the user clicks anywhere on the game after the game is over */
-function pause() {
-    document.addEventListener("click", function (event) {
+    document.body.addEventListener("click", function (event) {
         if (game.isOver() && !event.target.classList.contains("snake-segment")) {
             show(document.getElementById("menu"));
         }
-    })
-};
-
-pause();
+    });
